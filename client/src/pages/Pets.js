@@ -1,13 +1,21 @@
 import React, { useState } from 'react'
 import { useQuery, useMutation, gql } from '@apollo/client'
+import _get from 'lodash/get'
 import PetsList from '../components/PetsList'
 import NewPetModal from '../components/NewPetModal'
 import Loader from '../components/Loader'
 
+const GET_PETS = gql`
+  query GetPets {
+    pets {
+      id, name, type, img
+    }
+  }
+`
 
 export default function Pets() {
   const [modal, setModal] = useState(false)
-
+  const { loading, error, data } = useQuery(GET_PETS)
 
   const onSubmit = input => {
     setModal(false)
@@ -16,6 +24,16 @@ export default function Pets() {
   if (modal) {
     return <NewPetModal onSubmit={onSubmit} onCancel={() => setModal(false)} />
   }
+
+  if (loading) {
+    return <Loader />
+  }
+
+  if (error) {
+    return <p>Error!</p>
+  }
+
+  const pets = _get(data, 'pets') || []
 
   return (
     <div className="page pets-page">
@@ -31,7 +49,7 @@ export default function Pets() {
         </div>
       </section>
       <section>
-        <PetsList />
+        <PetsList pets={pets} />
       </section>
     </div>
   )
