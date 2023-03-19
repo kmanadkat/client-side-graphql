@@ -21,13 +21,48 @@ const ADD_PET = gql`
   }
 `
 
+const UpdatePetFragment = gql`
+  fragment NewPet on Pet {
+    id
+    name
+    type
+    img
+  }
+`
+
 export default function Pets() {
   const [modal, setModal] = useState(false)
   const { loading, error, data } = useQuery(GET_PETS)
-  const [addPet, { loading: newPetLoading, error: newPetError }] = useMutation(ADD_PET)
+  const [addPet, { loading: newPetLoading, error: newPetError }] = useMutation(ADD_PET, {
+    // Old Approach
+    // update(cache, response) {
+    //   const newPet = response.data.addPet
+    //   const { pets } = cache.readQuery({ query: GET_PETS })
+    //   const newPetsList = [newPet, ...pets]
+    //   cache.writeQuery({
+    //     query: GET_PETS,
+    //     data: { pets: newPetsList }
+    //   })
+    // }
+    // New Approach
+    update(cache, response) {
+      const newPet = response.data.addPet
+      const newPetRef = cache.writeFragment({
+        data: newPet,
+        fragment: UpdatePetFragment
+      })
+      cache.modify({
+        fields: {
+          pets(existingPets = []) {
+            return [newPetRef, ...existingPets]
+          }
+        }
+      })
+    }
+  })
 
   const onSubmit = input => {
-    addPet({ variables: input })
+    addPet({ variables: input, })
     setModal(false)
   }
 
