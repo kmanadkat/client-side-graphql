@@ -1,19 +1,19 @@
-import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client'
-import { ApolloLink } from 'apollo-link';
-import { setContext } from 'apollo-link-context';
+import { ApolloClient, InMemoryCache, HttpLink, ApolloLink, concat } from '@apollo/client'
 
 /**
  * Create a new apollo client and export as default
  */
 const httpLink = new HttpLink({ uri: 'http://localhost:4000/' });
-const delay = setContext(
-  request => new Promise((resolve, reject) => {
-    setTimeout(() => resolve(), 2000)
+const delayMiddleware = new ApolloLink((operation, forward) => {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(forward(operation))
+    }, 2000)
   })
-)
+})
 
 const client = new ApolloClient({
-  link: ApolloLink.from([delay, httpLink]),
+  link: concat(delayMiddleware, httpLink),
   cache: new InMemoryCache()
 })
 
