@@ -33,18 +33,7 @@ const UpdatePetFragment = gql`
 export default function Pets() {
   const [modal, setModal] = useState(false)
   const { loading, error, data } = useQuery(GET_PETS)
-  const [addPet, { loading: newPetLoading, error: newPetError }] = useMutation(ADD_PET, {
-    // Old Approach
-    // update(cache, response) {
-    //   const newPet = response.data.addPet
-    //   const { pets } = cache.readQuery({ query: GET_PETS })
-    //   const newPetsList = [newPet, ...pets]
-    //   cache.writeQuery({
-    //     query: GET_PETS,
-    //     data: { pets: newPetsList }
-    //   })
-    // }
-    // New Approach
+  const [addPet, { error: newPetError }] = useMutation(ADD_PET, {
     update(cache, response) {
       const newPet = response.data.addPet
       const newPetRef = cache.writeFragment({
@@ -62,7 +51,17 @@ export default function Pets() {
   })
 
   const onSubmit = input => {
-    addPet({ variables: input, })
+    addPet({
+      variables: input, optimisticResponse: {
+        __typename: "Mutation",
+        addPet: {
+          id: new Date().valueOf() + '',
+          img: "https://placedog.net/300/300",
+          __typename: "Pet",
+          ...input
+        }
+      }
+    })
     setModal(false)
   }
 
@@ -70,7 +69,7 @@ export default function Pets() {
     return <NewPetModal onSubmit={onSubmit} onCancel={() => setModal(false)} />
   }
 
-  if (loading || newPetLoading) {
+  if (loading) {
     return <Loader />
   }
 
