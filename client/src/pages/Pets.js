@@ -11,7 +11,8 @@ const PETS_FIELDS = gql`
       owner {
         id,
         age @client
-      }
+      },
+      vaccinated @client
   }
 `
 
@@ -66,6 +67,7 @@ export default function Pets() {
             id: new Date().valueOf() + '',
             age: 0
           },
+          vaccinated: false,
           ...input
         }
       }
