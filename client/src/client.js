@@ -1,8 +1,22 @@
-import { ApolloClient, InMemoryCache, HttpLink, ApolloLink, concat } from '@apollo/client'
+import { ApolloClient, InMemoryCache, HttpLink, ApolloLink, concat, gql } from '@apollo/client'
 
 /**
  * Create a new apollo client and export as default
  */
+const typeDefs = gql`
+  extend type User {
+    age: Int
+  }
+`
+
+const resolvers = {
+  User: {
+    age() {
+      return 26
+    }
+  }
+}
+
 const httpLink = new HttpLink({ uri: 'http://localhost:4000/' });
 const delayMiddleware = new ApolloLink((operation, forward) => {
   return new Promise((resolve, reject) => {
@@ -14,7 +28,9 @@ const delayMiddleware = new ApolloLink((operation, forward) => {
 
 const client = new ApolloClient({
   link: concat(delayMiddleware, httpLink),
-  cache: new InMemoryCache()
+  cache: new InMemoryCache(),
+  resolvers,
+  typeDefs
 })
 
 export default client

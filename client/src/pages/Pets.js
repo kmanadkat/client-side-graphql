@@ -8,7 +8,11 @@ import Loader from '../components/Loader'
 const GET_PETS = gql`
   query GetPets {
     pets {
-      id, name, type, img
+      id, name, type, img,
+      owner {
+        id,
+        age @client
+      }
     }
   }
 `
