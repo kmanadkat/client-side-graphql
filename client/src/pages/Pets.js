@@ -5,32 +5,31 @@ import PetsList from '../components/PetsList'
 import NewPetModal from '../components/NewPetModal'
 import Loader from '../components/Loader'
 
-const GET_PETS = gql`
-  query GetPets {
-    pets {
-      id, name, type, img,
+const PETS_FIELDS = gql`
+  fragment PetsFields on Pet {
+    id, name, type, img,
       owner {
         id,
         age @client
       }
+  }
+`
+
+const GET_PETS = gql`
+  ${PETS_FIELDS}
+  query GetPets {
+    pets {
+      ...PetsFields
     }
   }
 `
 
 const ADD_PET = gql`
+  ${PETS_FIELDS}
   mutation CreatePet($name: String!, $type: PetType!) {
     addPet(input: {name: $name, type: $type}){
-      id, name, type, img
+      ...PetsFields
     }
-  }
-`
-
-const UpdatePetFragment = gql`
-  fragment NewPet on Pet {
-    id
-    name
-    type
-    img
   }
 `
 
@@ -42,7 +41,7 @@ export default function Pets() {
       const newPet = response.data.addPet
       const newPetRef = cache.writeFragment({
         data: newPet,
-        fragment: UpdatePetFragment
+        fragment: PETS_FIELDS
       })
       cache.modify({
         fields: {
@@ -56,12 +55,17 @@ export default function Pets() {
 
   const onSubmit = input => {
     addPet({
-      variables: input, optimisticResponse: {
+      variables: input,
+      optimisticResponse: {
         __typename: "Mutation",
         addPet: {
           id: new Date().valueOf() + '',
           img: "https://placedog.net/300/300",
           __typename: "Pet",
+          owner: {
+            id: new Date().valueOf() + '',
+            age: 0
+          },
           ...input
         }
       }
